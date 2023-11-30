@@ -526,7 +526,7 @@ void loop() {
     dnsServer.processNextRequest();
     checkWebsocketRequests();
   } else {
-    if(millis() - prevMillis > 30000){
+    if(millis() - prevMillis > 18000000){
       prevMillis = millis();
       sendPhoto();
     }

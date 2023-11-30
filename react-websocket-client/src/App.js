@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Settings from './components/settings'
 import { Button, Spinner, Container, Row, Col, Tab,Tabs } from "react-bootstrap";
 import NetworksForm from "./components/NetworksForm"
-import NameForm from './components/NameForm';
+import NameForm from "./components/NameForm"
 
 function App() {
 const websocket = useRef(null);
