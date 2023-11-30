@@ -41,7 +41,7 @@ function Settings({startupData}) {
     <SettingsSlider startUpCheck={startupData.contrast} labelName={"Contrast"} controlVar={"contrast"} minVal={-2} maxVal={2}/>
     <SettingsSlider startUpCheck={startupData.saturation} labelName={"Saturation"} controlVar={"saturation"} minVal={-2} maxVal={2}/>
     <SettingsSlider startUpCheck={startupData.sharpness} labelName={"Sharpness"} controlVar={"sharpness"} minVal={-2} maxVal={2}/>
-    <SettingsSlider startUpCheck={startupData.framesize} labelName={"Framesize"} controlVar={"framesize"} minVal={0} maxVal={10}/>
+    <SettingsSlider startUpCheck={startupData.framesize} labelName={"Framesize"} controlVar={"framesize"} minVal={0} maxVal={13}/>
     <SettingsSlider startUpCheck={startupData.aec_value} labelName={"Exposure"} controlVar={"aec_value"} minVal={0} maxVal={1200}/>
     <SettingsSlider startUpCheck={startupData.wb_mode} labelName={"White Balance Mode"} controlVar={"wb_mode"} minVal={0} maxVal={4}/>
     <SettingsSlider startUpCheck={startupData.ae_level} labelName={"AE Level"} controlVar={"ae_level"} minVal={-2} maxVal={2}/>
