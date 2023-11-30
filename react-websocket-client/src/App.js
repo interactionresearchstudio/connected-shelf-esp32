@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Settings from './components/settings'
 import { Button, Spinner, Container, Row, Col, Tab,Tabs } from "react-bootstrap";
 import NetworksForm from "./components/NetworksForm"
-import NameForm from './components/nameForm';
+import NameForm from './components/NameForm';
 
 function App() {
 const websocket = useRef(null);
@@ -145,7 +145,7 @@ const websocket = useRef(null);
             <Tab eventKey="preview" title="Preview">  
           <Col md="6" className="mt-5">
             <h3>Camera Preview</h3>
-            <img src="http://192.168.2.1/stream" alt="stream"/>  
+            <img src="http://192.168.2.1/stream" className="preview-img" alt="stream"/>  
           </Col>
           </Tab>
           <Tab eventKey="settings" title="Camera Settings">  
