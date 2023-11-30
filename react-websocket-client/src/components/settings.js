@@ -33,7 +33,6 @@ function Settings({startupData}) {
 
     return (
     <>
-    <h2>Settings</h2>
     <SettingsCheckBox startUpCheck={startupData.vflip} labelName={"vertical flip"} controlVar={"vflip"}/>
     <SettingsCheckBox startUpCheck={startupData.hmirror} labelName={"Horizontal Mirror"} controlVar={"hmirror"}/>
     <SettingsSlider startUpCheck={startupData.brightness} labelName={"Brightness"} controlVar={"brightness"} minVal={-2} maxVal={2}/>

@@ -151,7 +151,6 @@ const websocket = useRef(null);
           <Tab eventKey="settings" title="Camera Settings">  
           <Col md="6" className="mt-5">
             <h3>Camera Settings</h3>
-            Settings go Here
             <Settings startupData = {dataJson}/>
           </Col>
           </Tab>
