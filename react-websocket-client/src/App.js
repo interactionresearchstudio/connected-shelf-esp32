@@ -145,7 +145,9 @@ const websocket = useRef(null);
             <Tab eventKey="preview" title="Preview">  
           <Col md="6" className="mt-5">
             <h3>Camera Preview</h3>
+            <Row>
             <img src="http://192.168.2.1/stream" className="preview-img" alt="stream"/>  
+            </Row>
           </Col>
           </Tab>
           <Tab eventKey="settings" title="Camera Settings">  

@@ -28,6 +28,12 @@ def renameReactAssets( source, target, env ):
     data_src_dir_path = os.path.join(env.get('PROJECT_DIR'), f"{react_proj_dir}/build")
     data_dir_path = os.path.join(env.get('PROJECT_DIR'), 'data_src')
     # rename dest to source if needed
+    isExist = os.path.exists(data_dir_path)
+    if not isExist:
+        os.makedirs(data_dir_path)
+    isExist = os.path.exists(data_src_dir_path)
+    if not isExist:
+        os.makedirs(data_src_dir_path)
     if(os.path.exists(data_dir_path) and not os.path.exists(data_src_dir_path) ):
         print('Rename: The directory "'+data_dir_path+'" exists, "'+data_src_dir_path+'" is not found.')
         print('Rename: Renaming "' + data_dir_path + '" to "' + data_src_dir_path + '"')
