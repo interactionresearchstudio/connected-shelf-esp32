@@ -58,7 +58,7 @@ jobs:
           path: ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
 
       - name: merge bins
-        run: ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ESP32 merge_bin -o .pio/build/esp32cam/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 .pio/build/esp32cam/bootloader.bin 0x8000 .pio/build/esp32cam/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/esp32cam/firmware.bin
+        run: ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ESP32 merge_bin -o .pio/build/esp32cam/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 .pio/build/esp32cam/bootloader.bin 0x8000 .pio/build/esp32cam/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/esp32cam/firmware.bin 0x00210000 .pio/build/esp32cam/littlefs.bin
 
       - name: Upload merged firmware
         uses: actions/upload-artifact@v3
