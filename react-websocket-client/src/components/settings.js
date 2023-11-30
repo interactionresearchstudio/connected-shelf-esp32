@@ -41,16 +41,29 @@ function Settings({startupData}) {
     <SettingsSlider startUpCheck={startupData.contrast} labelName={"Contrast"} controlVar={"contrast"} minVal={-2} maxVal={2}/>
     <SettingsSlider startUpCheck={startupData.saturation} labelName={"Saturation"} controlVar={"saturation"} minVal={-2} maxVal={2}/>
     <SettingsSlider startUpCheck={startupData.sharpness} labelName={"Sharpness"} controlVar={"sharpness"} minVal={-2} maxVal={2}/>
-    <SettingsSlider startUpCheck={startupData.framesize} labelName={"Framesize"} controlVar={"framesize"} minVal={0} maxVal={21}/>
+    <SettingsSlider startUpCheck={startupData.framesize} labelName={"Framesize"} controlVar={"framesize"} minVal={0} maxVal={10}/>
     <SettingsSlider startUpCheck={startupData.aec_value} labelName={"Exposure"} controlVar={"aec_value"} minVal={0} maxVal={1200}/>
     <SettingsSlider startUpCheck={startupData.wb_mode} labelName={"White Balance Mode"} controlVar={"wb_mode"} minVal={0} maxVal={4}/>
     <SettingsSlider startUpCheck={startupData.ae_level} labelName={"AE Level"} controlVar={"ae_level"} minVal={-2} maxVal={2}/>
     <SettingsSlider startUpCheck={startupData.agc_gain} labelName={"AGC Gain"} controlVar={"agc_gain"} minVal={0} maxVal={30}/>
     <SettingsSlider startUpCheck={startupData.special_effect} labelName={"Special Effects"} controlVar={"special_effect"} minVal={0} maxVal={6}/>
-
     <Button onClick={handleSaver} variant="primary">Save</Button>
     <span/>
     <Button onClick={handleReset} variant="primary">Reset</Button>
+
+    <h2>WiFi</h2>
+    <Form>
+      <Form.Group className="mb-3" controlId="ssidinput">
+        <Form.Label>SSID</Form.Label>
+        <Form.Control type="text" placeholder="SSID" />
+      </Form.Group>
+      <Form.Group className="mb-3" controlId="passinput">
+        <Form.Label>Password</Form.Label>
+        <Form.Control type="text" placeholder="PASS" />
+      </Form.Group>
+    </Form>
+    <Button onClick={handleWiFi} variant="primary">Save</Button>
+
     </>
     );
 
