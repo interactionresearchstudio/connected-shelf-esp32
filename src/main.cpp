@@ -10,18 +10,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "esp_camera.h"
 #include "util.h"
-#include <credentials.h>
 #include "json.h"
-
-//EXAMPLE CREDENTIALS.H FILE. ADD TO SRC/
-/*
-#ifndef CREDENTIALS_H
-#define CREDENTIALS_H
-#include "Arduino.h"
-String WIFISSID = "WIFINAME";
-String WIFIPASS = "PASS";
-#endif
-*/
 
 
 #define AP_SSID "CONNECTED SHELF"
