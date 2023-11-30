@@ -519,7 +519,7 @@ void setup() {
   setupWiFi();
 }
 
-unsigned long prevMillis;
+unsigned long prevMillis = 18000000;
 
 void loop() {
   if(isAP){
