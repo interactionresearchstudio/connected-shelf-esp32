@@ -1,15 +1,17 @@
 #include <Arduino.h>
+#include <main.h>
+#include <pins.h>
 #include <WiFi.h>
 #include <DNSServer.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
-//#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "esp_camera.h"
 #include "util.h"
 #include <credentials.h>
+#include "json.h"
 
 //EXAMPLE CREDENTIALS.H FILE. ADD TO SRC/
 /*
@@ -22,12 +24,13 @@ String WIFIPASS = "PASS";
 */
 
 
-#define SSID "CONNECTED SHELF"
+#define AP_SSID "CONNECTED SHELF"
 #define PASSWORD "12345678"
 #define DNS_PORT 53
 #define LED_BUILTIN 33
 #define LED_FLASH 4
 #define DEBUG_BUTTON_BUILTIN 0
+#define USER_BUTTON 14
 #define VERBOSE
 
 String namePrefix = "";
@@ -43,34 +46,20 @@ const IPAddress gateway(255, 255, 255, 0);
 
 DNSServer dnsServer;
 AsyncWebServer server(80);
-//AsyncWebSocket websocket("/ws");
+AsyncWebSocket websocket("/ws");
 #define MAX_NUM_CLIENTS 16
-//AsyncWebSocketClient *clients[MAX_NUM_CLIENTS];
+AsyncWebSocketClient *clients[MAX_NUM_CLIENTS];
 
 StaticJsonDocument<512> json;
 
-//CAMERA SETUP 
-
-// CAMERA_MODEL_AI_THINKER
-#define PWDN_GPIO_NUM     32
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
-
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
+//UI Variables
+bool wifiScanSend = false;
 
 
+void wsEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
+void isWiFiScanReady();
+void checkWebsocketRequests();
 
 typedef struct {
         camera_fb_t * fb;
@@ -203,7 +192,7 @@ class AsyncJpegStreamResponse: public AsyncAbstractResponse {
                 if(index && _frame.fb){
                     uint64_t end = (uint64_t)micros();
                     int fp = (end - lastAsyncRequest) / 1000;
-                    log_printf("Size: %uKB, Time: %ums (%.1ffps)\n", _jpg_buf_len/1024, fp);
+                   // log_printf("Size: %uKB, Time: %ums (%.1ffps)\n", _jpg_buf_len/1024, fp);
                     lastAsyncRequest = end;
                     if(_frame.fb->format != PIXFORMAT_JPEG){
                         free(_jpg_buf);
@@ -533,6 +522,7 @@ void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
   initPreferences();
+  initButton();
   setupCam();
   initCamSettings();
 
@@ -541,8 +531,6 @@ void setup() {
 #ifdef VERBOSE
   Serial.println("Connected Shelf ESP32 CAM");
 #endif
- // setupAP();
- // setupServer();
   setupWiFi();
 }
 
@@ -551,86 +539,31 @@ unsigned long prevMillis;
 void loop() {
   if(isAP){
     dnsServer.processNextRequest();
+    checkWebsocketRequests();
   } else {
     if(millis() - prevMillis > 30000){
       prevMillis = millis();
       sendPhoto();
     }
   }
-  if(touchRead(14) < 10 && isAP == false){
-   setupAP();
+  if(digitalRead(USER_BUTTON) == false && isAP == false){
+    Serial.println("initialising ap");
+    setupAP();
     setupServer();
   }
   vTaskDelay(1);
 }
-/*
-void wsEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  if (type == WS_EVT_DATA)
-  {
-#ifdef VERBOSE
-    Serial.println("Data received from websocket");
-#endif
-    deserialiseJson(data, len);
-  }
-  else if (type == WS_EVT_CONNECT)
-  {
-#ifdef VERBOSE
-    Serial.println("Websocket client connection received");
-#endif
-    // store connected client
-    for (int i = 0; i < MAX_NUM_CLIENTS; ++i)
-      if (clients[i] == NULL)
-      {
-        clients[i] = client;
-        break;
-      }
-  }
-  else if (type == WS_EVT_DISCONNECT)
-  {
-#ifdef VERBOSE
-    Serial.println("Client disconnected");
-#endif
-    // remove client from storage
-    for (int i = 0; i < MAX_NUM_CLIENTS; ++i)
-      if (clients[i] == client)
-        clients[i] = NULL;
-  }
-}
 
-void deserialiseJson(uint8_t *data, size_t len) {
-  json.clear();
-  DeserializationError error = deserializeJson(json, data, len);
-
-  if (error) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(error.c_str());
-    return;
-  }
-
-  const char* type = json["type"]; // What type of message is this?
-#ifdef VERBOSE
-  Serial.println(type);
-#endif
-
-  if (strcmp(json["type"], "blink") == 0) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(10);
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-}
-*/
 void setupWiFi(){
-    setCredentials(WIFISSID.c_str(),WIFIPASS.c_str());
- // if(isCredentials() == false){
+  if(isCredentials() == false){
     #ifdef VERBOSE 
       Serial.println("Setting up access point...");
     #endif
-//    setupAP();
- //   setupServer();
-//  } else {
+    setupAP();
+    setupServer();
+  } else {
     setupSTA();
- // }
+  }
 }
 
 void setupSTA(){
@@ -671,9 +604,9 @@ void setupAP() {
   WiFi.mode(WIFI_AP);
   
 #ifndef PASSWORD
-  WiFi.softAP(SSID);
+  WiFi.softAP(AP_SSID);
 #else
-  WiFi.softAP(SSID, PASSWORD);
+  WiFi.softAP(AP_SSID, PASSWORD);
 #endif
   WiFi.softAPConfig(apIP, apIP, gateway);
   dnsServer.start(DNS_PORT, "*", apIP);
@@ -690,8 +623,8 @@ void setupServer() {
   }
 
   // bind websocket to async web server
-  //websocket.onEvent(wsEventHandler);
-  //server.addHandler(&websocket);
+  websocket.onEvent(wsEventHandler);
+  server.addHandler(&websocket);
 
   // Root
  //camera stream
@@ -941,4 +874,118 @@ String sendPhoto() {
 
   esp_camera_fb_return(fb);
   return getBody;
+}
+
+
+void wsEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  if (type == WS_EVT_DATA)
+  {
+    handleWebSocketMessage(arg,data,len);
+  }
+  else if (type == WS_EVT_CONNECT)
+  {
+    Serial.println("Websocket client connection received");
+    // store connected client
+    for (int i = 0; i < MAX_NUM_CLIENTS; ++i)
+      if (clients[i] == NULL)
+      {
+        clients[i] = client;
+        break;
+      }
+  }
+  else if (type == WS_EVT_DISCONNECT)
+  {
+    Serial.println("Client disconnected");
+    // remove client from storage
+    for (int i = 0; i < MAX_NUM_CLIENTS; ++i)
+      if (clients[i] == client)
+        clients[i] = NULL;
+  }
+}
+
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    String in = String((char*)data);
+    Serial.println(in);
+    if (len > 2) {
+      if (in.indexOf("{\"") >= 0 && in.indexOf("SSID") >= 0 ) {
+        Serial.println("it's networks");
+        const uint8_t size = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<size> json;
+        DeserializationError err = deserializeJson(json, data);
+        if (err) {
+          Serial.print(F("deserializeJson() failed with code "));
+          Serial.println(err.c_str());
+          return;
+        }
+        const char *SSIDIN = json["SSID"];
+        Serial.println(SSIDIN);
+        const char *PASSIN = json["PASS"];
+        Serial.println(PASSIN);
+        setCredentials(SSIDIN,PASSIN);
+      //  setNetwork(SSIDIN, PASSIN);
+     //   connectToRouter(String(SSIDIN), String(PASSIN), 60000);
+      //  connectedStatusSend = true;
+        json.clear();
+      } else if (in.indexOf("networks") >= 0) {
+        // send network scan
+       // blinkLed(50);
+        wifiScanSend = true;
+      } else if (in.indexOf("status") >= 0) {
+        // send connected states
+       // blinkLed(50);
+     //   connectedStatusSend = true;
+      }
+    }
+  }
+}
+
+void sendWiFiScan() {
+  String scan = getScanAsJsonString();
+  char buf[1000];
+  scan.toCharArray(buf, scan.length() + 1);
+  websocket.textAll(buf, scan.length());
+  Serial.println(scan);
+}
+
+void sendConnectedStatus() {
+  char buf[200];
+  String out;
+  /*if (isConnectedToInternet()) {
+    out = "{\"wifi_connected\": true}";
+  } else if (isConnectedToInternet() == false) {
+    out = "{\"wifi_connected\": false}";
+  }
+  out.toCharArray(buf, out.length() + 1);
+  websocket.textAll(buf, out.length());
+  Serial.println(out);
+  */
+}
+
+
+//Functions triggered by buttons on webpage
+void checkWebsocketRequests() {
+  isWiFiScanReady();
+ // isConnectedStatusReady();
+}
+
+void isConnectedStatusReady() {
+  //if (connectedStatusSend == true) {
+  //  sendConnectedStatus();
+ //   connectedStatusSend = false;
+ // }
+}
+
+void isWiFiScanReady() {
+  if (wifiScanSend == true) {
+    sendWiFiScan();
+   wifiScanSend = false;
+  }
+}
+
+String getWifiAPName(){
+  return AP_SSID;
 }

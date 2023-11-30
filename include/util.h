@@ -16,4 +16,6 @@ int getSetting(String name);
 
 void setSetting(String name, int value);
 
+void initButton();
+
 #endif

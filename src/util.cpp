@@ -1,4 +1,5 @@
 #include "util.h"
+#include <pins.h>
 #include <Arduino.h> /* we need arduino functions to implement this */
 #include <Preferences.h>
 Preferences prefs;
@@ -34,4 +35,8 @@ int getSetting(String name){
 
 void setSetting(String name, int value){
     prefs.putInt(name.c_str(), value);
+}
+
+void initButton(){
+    pinMode(USER_BUTTON,INPUT_PULLUP);
 }
