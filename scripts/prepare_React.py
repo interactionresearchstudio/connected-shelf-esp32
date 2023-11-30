@@ -20,7 +20,7 @@ def renameReactAssets( source, target, env ):
         print(f"Error installing dependencies for react application in ./{react_proj_dir}")
         return    
     print('\nRunning `npm run build`')
-    if os.system("npm run build") != 0:
+    if os.system("CI= npm run build") != 0:
         print(f"Error building react application in ./{react_proj_dir}")
         return    
     os.chdir('..')    
