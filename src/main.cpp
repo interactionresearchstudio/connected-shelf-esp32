@@ -43,9 +43,9 @@ const IPAddress gateway(255, 255, 255, 0);
 
 DNSServer dnsServer;
 AsyncWebServer server(80);
-AsyncWebSocket websocket("/ws");
+//AsyncWebSocket websocket("/ws");
 #define MAX_NUM_CLIENTS 16
-AsyncWebSocketClient *clients[MAX_NUM_CLIENTS];
+//AsyncWebSocketClient *clients[MAX_NUM_CLIENTS];
 
 StaticJsonDocument<512> json;
 
@@ -563,7 +563,7 @@ void loop() {
   }
   vTaskDelay(1);
 }
-
+/*
 void wsEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   if (type == WS_EVT_DATA)
@@ -619,7 +619,7 @@ void deserialiseJson(uint8_t *data, size_t len) {
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
-
+*/
 void setupWiFi(){
     setCredentials(WIFISSID.c_str(),WIFIPASS.c_str());
  // if(isCredentials() == false){
@@ -690,8 +690,8 @@ void setupServer() {
   }
 
   // bind websocket to async web server
-  websocket.onEvent(wsEventHandler);
-  server.addHandler(&websocket);
+  //websocket.onEvent(wsEventHandler);
+  //server.addHandler(&websocket);
 
   // Root
  //camera stream

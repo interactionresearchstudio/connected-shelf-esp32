@@ -2,7 +2,7 @@
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
-import { w3cwebsocket as W3CWebSocket } from "websocket";
+//import { w3cwebsocket as W3CWebSocket } from "websocket";
 import React, { useState, useEffect, useRef } from 'react';
 import Settings from './components/settings'
 
