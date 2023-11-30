@@ -1,0 +1,109 @@
+name: connected-shelf-esp32
+
+on: [push]
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Build PlatformIO Project
+        run: pio run
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware.bin
+          path: .pio/build/esp32cam/firmware.bin
+
+      - name: Upload bootloader
+        uses: actions/upload-artifact@v3
+        with:
+          name: bootloader.bin
+          path: .pio/build/esp32cam/bootloader.bin
+
+      - name: Upload partitions
+        uses: actions/upload-artifact@v3
+        with:
+          name: partitions.bin
+          path: .pio/build/esp32cam/partitions.bin
+
+      - name: Upload boot app
+        uses: actions/upload-artifact@v3
+        with:
+          name: boot_app0.bin
+          path: ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
+
+      - name: merge bins
+        run: ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ESP32 merge_bin -o .pio/build/esp32cam/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 .pio/build/esp32cam/bootloader.bin 0x8000 .pio/build/esp32cam/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/esp32cam/firmware.bin
+
+      - name: Upload merged firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: merged-firmware.bin
+          path: .pio/build/esp32cam/merged-firmware.bin
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v3
+        with:
+          name: manifest.json
+          path: manifest.json
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Connected Displays Camera ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Upload merged-firmware.bin to Release
+        id: upload-release-asset-1
+        uses: actions/upload-release-asset@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: .pio/build/esp32cam/merged-firmware.bin
+          asset_name: merged-firmware.bin
+          asset_content_type: application/octet-stream
+
+      - name: Copy firmware to flasher tool
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: cp .pio/build/esp32cam/merged-firmware.bin flasher-tool/merged-firmware.bin
+
+      - name: Upload flasher tool artifact
+        uses: actions/upload-pages-artifact@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          path: flasher-tool
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+        if: startsWith(github.ref, 'refs/tags/v')
