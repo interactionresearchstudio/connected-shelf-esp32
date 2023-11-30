@@ -50,21 +50,7 @@ function Settings({startupData}) {
     <Button onClick={handleSaver} variant="primary">Save</Button>
     <span/>
     <Button onClick={handleReset} variant="primary">Reset</Button>
-
-    <h2>WiFi</h2>
-    <Form>
-      <Form.Group className="mb-3" controlId="ssidinput">
-        <Form.Label>SSID</Form.Label>
-        <Form.Control type="text" placeholder="SSID" />
-      </Form.Group>
-      <Form.Group className="mb-3" controlId="passinput">
-        <Form.Label>Password</Form.Label>
-        <Form.Control type="text" placeholder="PASS" />
-      </Form.Group>
-    </Form>
-    <Button onClick={handleWiFi} variant="primary">Save</Button>
-
-    </>
+   </>
     );
 
 }

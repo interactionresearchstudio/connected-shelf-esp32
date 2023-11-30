@@ -28,7 +28,7 @@ function NetworksForm(props) {
                         value={props.pass}
                     />
                 </Form.Group>
-                {props.connected ? <Button variant='success' disabled>Connected</Button> : <Button type='submit' onClick={props.onSubmit}>Connect</Button>}
+                {props.connected ? <Button variant='success' disabled>Connected</Button> : <Button type='submit' onClick={props.onSubmit}>Save</Button>}
             </fieldset>
         </Form>
     );

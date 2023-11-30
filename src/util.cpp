@@ -2,6 +2,7 @@
 #include <pins.h>
 #include <Arduino.h> /* we need arduino functions to implement this */
 #include <Preferences.h>
+
 Preferences prefs;
 
 bool isCredentials(){
@@ -39,4 +40,12 @@ void setSetting(String name, int value){
 
 void initButton(){
     pinMode(USER_BUTTON,INPUT_PULLUP);
+}
+
+void setName(String name){
+     prefs.putString("NAME", name);
+}
+
+String getName(){
+    return prefs.getString("NAME", DEFAULTNAME);
 }

@@ -3,9 +3,10 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import React, { useState, useEffect, useRef } from 'react';
-//import Settings from './components/settings'
-import { Button, Spinner, Container, Row, Col } from "react-bootstrap";
+import Settings from './components/settings'
+import { Button, Spinner, Container, Row, Col, Tab,Tabs } from "react-bootstrap";
 import NetworksForm from "./components/NetworksForm"
+import NameForm from './components/nameForm';
 
 function App() {
 const websocket = useRef(null);
@@ -16,11 +17,20 @@ const websocket = useRef(null);
  const [isWifiScanning, setIsWifiScanning] = useState(false);
  const [scanWifiIntervalId, setScanWifiIntervalId] = useState(null);
  const [networks, setNetworks] = useState([]);
- const [feeds, setFeeds] = useState([]);
+ const [name, setName] = useState("");
  const [wifiSSID, setWifiSSID] = useState("");
  const [wifiPass, setWifiPass] = useState("");
 
   useEffect(() => {
+    fetch('http://192.168.2.1/status')
+  .then((res) => res.json())
+  .then((data) => {
+    setdataJson(data);
+    console.log(data);
+  })
+  .catch((err) => {
+     console.log(err.message);
+  });
     websocket.current = new W3CWebSocket(`ws://${window.location.hostname}/ws`);
     websocket.current.onmessage = (e) => {
       const json = JSON.parse(e.data);
@@ -82,12 +92,28 @@ const websocket = useRef(null);
     }
   };
 
+  const handleNameFormChange = (e) => {
+    if (e.target.id === "name") {
+      setName(e.target.value);
+    }
+  };
+
+  const onNameSubmit = (e) => {
+    e.preventDefault();
+    console.log("Name submitted.");
+    websocket.current.send(JSON.stringify({ NAME: name }));
+  };
+
 
   return (
     <div className="App mt-5">
-      <Container>
+      <Tabs
+      defaultActiveKey="wifi"
+      id="uncontrolled-tab-example"
+      className="mb-3"
+    >
+      <Tab eventKey="wifi" title="Wifi Settings">
         <h1>Configure Your Devices</h1>
-        <Row>
           <Col md="6" className="mt-5">
             <h3>WiFi Settings</h3>
             <Button
@@ -102,21 +128,34 @@ const websocket = useRef(null);
               {isWifiScanning ? " Scanning..." : "Scan for Networks"}
             </Button>
             <NetworksForm
-              connected={isWifiConnected}
               onSubmit={onWifiSubmit}
               networks={networks}
               onFormChange={handleWifiFormChange}
               ssid={wifiSSID}
               pass={wifiPass}
-            />        
+            /> 
+            <NameForm
+              onSubmit={onNameSubmit}
+              onFormChange={handleNameFormChange}
+              name={name}
+            /> 
+
+            </Col>  
+            </Tab>   
+            <Tab eventKey="preview" title="Preview">  
+          <Col md="6" className="mt-5">
+            <h3>Camera Preview</h3>
+            <img src="http://192.168.2.1/stream" alt="stream"/>  
           </Col>
+          </Tab>
+          <Tab eventKey="settings" title="Camera Settings">  
           <Col md="6" className="mt-5">
             <h3>Camera Settings</h3>
-            <img src="http://192.168.2.1/stream" alt="stream"/>
-            
+            Settings go Here
+            <Settings startupData = {dataJson}/>
           </Col>
-        </Row>
-      </Container>
+          </Tab>
+        </Tabs>
     </div>
   );
 }

@@ -1,13 +1,18 @@
 #ifndef PINS_H /* include guards */
 #define PINS_H
 #include <Arduino.h>
-#define USER_BUTTON 14
 
+//INPUT
+#define USER_BUTTON 14
+#define LED_BUILTIN 33
+#define LED_FLASH 4
+#define DEBUG_BUTTON_BUILTIN 0
+
+//NETWORK
 #define MAX_NETWORKS_TO_SCAN 5
 #define SSID_MAX_LENGTH 31
 
-//CAMERA SETUP 
-
+//CAMERA  
 // CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1

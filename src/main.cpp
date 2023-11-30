@@ -27,14 +27,10 @@ String WIFIPASS = "PASS";
 #define AP_SSID "CONNECTED SHELF"
 #define PASSWORD "12345678"
 #define DNS_PORT 53
-#define LED_BUILTIN 33
-#define LED_FLASH 4
-#define DEBUG_BUTTON_BUILTIN 0
-#define USER_BUTTON 14
+
 #define VERBOSE
 
 String namePrefix = "";
-String displayName = "andydisplay";
 String serverName = "irs-iot.ddns.net";   //
 String serverPath = "/upload";     // The default serverPath should be upload.php
 const int serverPort = 80; //server port for HTTPS
@@ -805,14 +801,14 @@ String sendPhoto() {
   String serverURL = serverName;
   if (client.connect(serverURL.c_str(), serverPort)) {
     Serial.println("Connection successful!");
-    String head = "--RandomNerdTutorials\r\nContent-Disposition: form-data; name=\"image\"; filename=\"" + namePrefix + displayName + ".jpg\"\r\nContent-Type: image/jpeg\r\n\r\n";
+    String head = "--RandomNerdTutorials\r\nContent-Disposition: form-data; name=\"image\"; filename=\"" + namePrefix + getName() + ".jpg\"\r\nContent-Type: image/jpeg\r\n\r\n";
     String tail = "\r\n--RandomNerdTutorials--\r\n";
 
     uint32_t imageLen = fb->len;
     uint32_t extraLen = head.length() + tail.length();
     uint32_t totalLen = imageLen + extraLen;
 
-    client.println("POST " + serverPath + "/" + displayName + " HTTP/1.1");
+    client.println("POST " + serverPath + "/" + getName() + " HTTP/1.1");
     client.println("Host: " + serverName);
     client.println("Content-Length: " + String(totalLen));
     client.println("Content-Type: multipart/form-data; boundary=RandomNerdTutorials");
@@ -938,6 +934,23 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         // send connected states
        // blinkLed(50);
      //   connectedStatusSend = true;
+      } else if (in.indexOf("{\"") >= 0 && in.indexOf("NAME") >= 0 ) {
+        Serial.println("it's name");
+        const uint8_t size = JSON_OBJECT_SIZE(1);
+        StaticJsonDocument<size> json;
+        DeserializationError err = deserializeJson(json, data);
+        if (err) {
+          Serial.print(F("deserializeJson() failed with code "));
+          Serial.println(err.c_str());
+          return;
+        }
+        const char *NAME = json["NAME"];
+        Serial.println(NAME);
+        setName(NAME);
+      //  setNetwork(SSIDIN, PASSIN);
+     //   connectToRouter(String(SSIDIN), String(PASSIN), 60000);
+      //  connectedStatusSend = true;
+        json.clear();
       }
     }
   }
