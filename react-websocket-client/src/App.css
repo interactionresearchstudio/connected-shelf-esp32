@@ -1,4 +1,5 @@
 
 .preview-img {
-    rotate: 270deg;
+    margin: auto;
+    transform: rotate(270deg) scale(1, 1);
 }

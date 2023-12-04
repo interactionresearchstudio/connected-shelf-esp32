@@ -107,15 +107,17 @@ const websocket = useRef(null);
 
   return (
     <div className="App mt-5">
+      <Container>
       <Tabs
       defaultActiveKey="wifi"
       id="uncontrolled-tab-example"
       className="mb-3"
     >
       <Tab eventKey="wifi" title="Wifi Settings">
-        <h1>Configure Your Devices</h1>
           <Col md="6" className="mt-5">
+          <Row>
             <h3>WiFi Settings</h3>
+          </Row>
             <Button
               variant="secondary"
               disabled={isWifiScanning}
@@ -144,7 +146,9 @@ const websocket = useRef(null);
             </Tab>   
             <Tab eventKey="preview" title="Preview">  
           <Col md="6" className="mt-5">
+          <Row>
             <h3>Camera Preview</h3>
+          </Row>
             <Row>
             <img src="http://192.168.2.1/stream" className="preview-img" alt="stream"/>  
             </Row>
@@ -152,11 +156,14 @@ const websocket = useRef(null);
           </Tab>
           <Tab eventKey="settings" title="Camera Settings">  
           <Col md="6" className="mt-5">
+          <Row>
             <h3>Camera Settings</h3>
+          </Row>
             <Settings startupData = {dataJson}/>
           </Col>
           </Tab>
         </Tabs>
+        </Container>
     </div>
   );
 }

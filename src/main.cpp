@@ -512,7 +512,6 @@ void setup() {
   initCamSettings();
 
 
-
 #ifdef VERBOSE
   Serial.println("Connected Shelf ESP32 CAM");
 #endif
@@ -738,8 +737,8 @@ void setupCam(){
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
@@ -770,6 +769,14 @@ void setupCam(){
 
   sensor_t * s = esp_camera_sensor_get();
 
+  camera_fb_t* frameBuffer = nullptr;
+  // Skip first N frames.
+  for (int i = 0; i < 3; i++) {
+    frameBuffer = esp_camera_fb_get();
+    esp_camera_fb_return(frameBuffer);
+    frameBuffer = nullptr;
+}
+
 }
 
 String sendPhoto() {
@@ -790,8 +797,8 @@ String sendPhoto() {
   String serverURL = serverName;
   if (client.connect(serverURL.c_str(), serverPort)) {
     Serial.println("Connection successful!");
-    String head = "--RandomNerdTutorials\r\nContent-Disposition: form-data; name=\"image\"; filename=\"" + namePrefix + getName() + ".jpg\"\r\nContent-Type: image/jpeg\r\n\r\n";
-    String tail = "\r\n--RandomNerdTutorials--\r\n";
+    String head = "--ConnectedShelf\r\nContent-Disposition: form-data; name=\"image\"; filename=\"" + namePrefix + getName() + ".jpg\"\r\nContent-Type: image/jpeg\r\n\r\n";
+    String tail = "\r\n--ConnectedShelf--\r\n";
 
     uint32_t imageLen = fb->len;
     uint32_t extraLen = head.length() + tail.length();
@@ -800,7 +807,7 @@ String sendPhoto() {
     client.println("POST " + serverPath + "/" + getName() + " HTTP/1.1");
     client.println("Host: " + serverName);
     client.println("Content-Length: " + String(totalLen));
-    client.println("Content-Type: multipart/form-data; boundary=RandomNerdTutorials");
+    client.println("Content-Type: multipart/form-data; boundary=ConnectedShelf");
     client.println();
     client.print(head);
 
