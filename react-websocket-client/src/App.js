@@ -45,6 +45,8 @@ const websocket = useRef(null);
           if ("SSID" in json[0]) {
             console.log("Received networks!");
             setNetworks(json);
+            clearInterval(scanWifiIntervalId);
+            setIsWifiScanning(false);
           } else {
             console.log("Array with unknown structure. No data was updated.");
           }
@@ -146,9 +148,9 @@ const websocket = useRef(null);
             </Tab>   
             <Tab eventKey="preview" title="Preview">  
           <Col md="6" className="mt-5">
-          <Row>
-            <h3>Camera Preview</h3>
-          </Row>
+            <Row>
+              <h3>Camera Preview</h3>
+            </Row>
             <Row>
             <img src="http://192.168.2.1/stream" className="preview-img" alt="stream"/>  
             </Row>

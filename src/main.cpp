@@ -2,7 +2,7 @@
 #include <main.h>
 #include <pins.h>
 #include <WiFi.h>
-#include <DNSServer.h>
+//#include <DNSServer.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
@@ -29,7 +29,7 @@ WiFiClient client;
 const IPAddress apIP(192, 168, 2, 1);
 const IPAddress gateway(255, 255, 255, 0);
 
-DNSServer dnsServer;
+//DNSServer dnsServer;
 AsyncWebServer server(80);
 AsyncWebSocket websocket("/ws");
 #define MAX_NUM_CLIENTS 16
@@ -506,6 +506,7 @@ bool isAP = false;
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
+  delay(4000);
   initPreferences();
   initButton();
   setupCam();
@@ -522,7 +523,7 @@ unsigned long prevMillis = 18000000;
 
 void loop() {
   if(isAP){
-    dnsServer.processNextRequest();
+   // dnsServer.processNextRequest();
     checkWebsocketRequests();
   } else {
     if(millis() - prevMillis > 18000000){
@@ -593,7 +594,7 @@ void setupAP() {
   WiFi.softAP(AP_SSID, PASSWORD);
 #endif
   WiFi.softAPConfig(apIP, apIP, gateway);
-  dnsServer.start(DNS_PORT, "*", apIP);
+ // dnsServer.start(DNS_PORT, "*", apIP);
 }
 
 void setupServer() {

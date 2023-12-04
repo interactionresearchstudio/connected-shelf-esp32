@@ -15,7 +15,7 @@ function SettingsSlider({startUpCheck, labelName,controlVar,minVal,maxVal}) {
     return (
       <Form>
       <Form.Group as={Row}>
-      <Form.Label column sm="1">
+      <Form.Label>
           {labelName}
         </Form.Label>
         <Col sm="8">
