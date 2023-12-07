@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import React, { useState, useEffect, useRef } from 'react';
 import Settings from './components/settings'
-import { Button, Spinner, Container, Row, Col, Tab,Tabs } from "react-bootstrap";
+import { Button, Spinner, Container, Row, Col, Tab,Tabs,Badge} from "react-bootstrap";
 import NetworksForm from "./components/NetworksForm"
 import NameForm from "./components/NameForm"
 
@@ -47,7 +47,12 @@ const websocket = useRef(null);
             setNetworks(json);
             clearInterval(scanWifiIntervalId);
             setIsWifiScanning(false);
-          } else {
+          } else  if ("connected" in json[0]) {
+            console.log(json[0].connected);
+            console.log(json[0].displayName);
+            setWifiConnected(json[0].connected)
+            setName(json[0].displayName)
+          }else{
             console.log("Array with unknown structure. No data was updated.");
           }
         }
@@ -74,7 +79,6 @@ const websocket = useRef(null);
   const handleWifiScan = (e) => {
     console.log("Start wifi scan");
     setIsWifiScanning(true);
-    setWifiConnected(false);
     websocket.current.send("networks");
     let id = setInterval(() => {
       console.log("Requested networks");
@@ -85,7 +89,6 @@ const websocket = useRef(null);
 
   const handleWifiFormChange = (e) => {
     setIsWifiScanning(false);
-    setWifiConnected(false);
     clearInterval(scanWifiIntervalId);
     if (e.target.id === "ssid") {
       setWifiSSID(e.target.value);
@@ -118,8 +121,17 @@ const websocket = useRef(null);
       <Tab eventKey="wifi" title="Wifi Settings">
           <Col md="6" className="mt-5">
           <Row>
+            <Col>
             <h3>WiFi Settings</h3>
+            </Col>
+          </Row> 
+          <Row>
+          <Col sm="8">
+          {isWifiConnected ? (<Badge bg="success" >Connected</Badge>):(<Badge bg="danger" >Not Connected</Badge>)}
+          </Col>
           </Row>
+          <Row>
+          <Col sm="8">
             <Button
               variant="secondary"
               disabled={isWifiScanning}
@@ -131,6 +143,8 @@ const websocket = useRef(null);
               ) : null}
               {isWifiScanning ? " Scanning..." : "Scan for Networks"}
             </Button>
+            </Col>
+            </Row>
             <NetworksForm
               onSubmit={onWifiSubmit}
               networks={networks}
@@ -143,7 +157,6 @@ const websocket = useRef(null);
               onFormChange={handleNameFormChange}
               name={name}
             /> 
-
             </Col>  
             </Tab>   
             <Tab eventKey="preview" title="Preview">  

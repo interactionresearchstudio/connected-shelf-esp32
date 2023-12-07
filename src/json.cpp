@@ -9,11 +9,20 @@ String getScanAsJsonString() {
   return (jsonString);
 }
 
+String getStatusAsJsonString() {
+  String jsonString;
+  StaticJsonDocument<200> jsonDoc;
+  getStatusAsJson(jsonDoc);
+  serializeJson(jsonDoc[0], jsonString);
+  jsonDoc.clear();
+  return (jsonString);
+}
+
 void getScanAsJson(JsonDocument& jsonDoc) {
   JsonArray networks = jsonDoc.createNestedArray();
 
   WiFi.disconnect();
-  WiFi.mode(WIFI_AP_STA);
+  //WiFi.mode(WIFI_AP_STA);
   int n = WiFi.scanNetworks();
   if(n > 5) n = 5;
 
@@ -27,4 +36,13 @@ void getScanAsJson(JsonDocument& jsonDoc) {
       //network["RSSI"] = WiFi.RSSI(i);
     }
   }
+}
+
+void getStatusAsJson(JsonDocument& jsonDoc) {
+  JsonArray statuses = jsonDoc.createNestedArray();
+      JsonObject status  = statuses.createNestedObject();
+      status["connected"] = getInternetStatus();
+      status["displayName"] = getName();
+      //network["BSSID"] = WiFi.BSSIDstr(i);
+      //network["RSSI"] = WiFi.RSSI(i);
 }

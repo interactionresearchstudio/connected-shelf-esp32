@@ -24,5 +24,9 @@ void setSetting(String name, int value);
 
 void initButton();
 
+void setInternetStatus(bool status);
+
+bool getInternetStatus();
+
 
 #endif

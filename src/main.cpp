@@ -13,7 +13,7 @@
 #include "json.h"
 
 
-#define AP_SSID "CONNECTED SHELF"
+String AP_SSID = "CS";
 #define PASSWORD "12345678"
 #define DNS_PORT 53
 
@@ -39,12 +39,23 @@ StaticJsonDocument<512> json;
 
 //UI Variables
 bool wifiScanSend = false;
+bool connectedStatusSend = false;
+
+unsigned long noneBlockingWifiConnectStartTime;
+unsigned long prevWifiMillis;
+bool isNBConnecting = false;
+unsigned long wifiCheckMillis;
 
 
 void wsEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
 void isWiFiScanReady();
 void checkWebsocketRequests();
+void isConnectedStatusReady();
+void noneblockingWiFiConnect();
+void noneblockingWiFiHandler();
+void setupAPSSID();
+void wifiStatusCheck();
 
 typedef struct {
         camera_fb_t * fb;
@@ -507,6 +518,7 @@ void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
   delay(4000);
+  setupAPSSID();
   initPreferences();
   initButton();
   setupCam();
@@ -525,6 +537,8 @@ void loop() {
   if(isAP){
    // dnsServer.processNextRequest();
     checkWebsocketRequests();
+    noneblockingWiFiHandler();
+    wifiStatusCheck();
   } else {
     if(millis() - prevMillis > 18000000){
       prevMillis = millis();
@@ -570,6 +584,7 @@ void setupSTA(){
     #ifdef VERBOSE
       Serial.println("Could not connect to WiFi, reverting to Access Point");
     #endif
+    setInternetStatus(false);
     setupAP();
     setupServer();
   } else {
@@ -577,6 +592,7 @@ void setupSTA(){
       Serial.println("Connected!");
       Serial.println(WiFi.localIP());
     #endif
+      setInternetStatus(true);
   }
 }
 
@@ -587,15 +603,36 @@ void setupAP() {
 #endif
   WiFi.disconnect();   //added to start with the wifi off, avoid crashing
   WiFi.mode(WIFI_OFF); //added to start with the wifi off, avoid crashing
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
   
-#ifndef PASSWORD
+ // dnsServer.start(DNS_PORT, "*", apIP);
+ if(isCredentials()){
+  WiFi.begin(getSSID().c_str(),getPass().c_str());
+  wifiConnectStartTime = millis();
+  while (WiFi.status() != WL_CONNECTED && (millis() - wifiConnectStartTime) <= 8000) // try for 5 seconds
+    {
+      delay(500);
+      Serial.print(".");
+    }
+  if(WiFi.status() != WL_CONNECTED){
+    #ifdef VERBOSE
+      Serial.println("Could not connect to WiFi, reverting to Access Point");
+    #endif
+    setInternetStatus(false);
+  } else {
+     #ifdef VERBOSE
+      Serial.println("Connected!");
+      Serial.println(WiFi.localIP());
+    #endif
+    setInternetStatus(true);
+  }
+ }
+ #ifndef PASSWORD
   WiFi.softAP(AP_SSID);
 #else
   WiFi.softAP(AP_SSID, PASSWORD);
 #endif
   WiFi.softAPConfig(apIP, apIP, gateway);
- // dnsServer.start(DNS_PORT, "*", apIP);
 }
 
 void setupServer() {
@@ -773,9 +810,10 @@ void setupCam(){
 
   camera_fb_t* frameBuffer = nullptr;
   // Skip first N frames.
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     frameBuffer = esp_camera_fb_get();
     esp_camera_fb_return(frameBuffer);
+    delay(500);
     frameBuffer = nullptr;
 }
 
@@ -920,10 +958,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         const char *PASSIN = json["PASS"];
         Serial.println(PASSIN);
         setCredentials(SSIDIN,PASSIN);
-      //  setNetwork(SSIDIN, PASSIN);
-     //   connectToRouter(String(SSIDIN), String(PASSIN), 60000);
-      //  connectedStatusSend = true;
         json.clear();
+        noneblockingWiFiConnect();
+
       } else if (in.indexOf("networks") >= 0) {
         // send network scan
        // blinkLed(50);
@@ -931,7 +968,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       } else if (in.indexOf("status") >= 0) {
         // send connected states
        // blinkLed(50);
-     //   connectedStatusSend = true;
+        connectedStatusSend = true;
+
+
       } else if (in.indexOf("{\"") >= 0 && in.indexOf("NAME") >= 0 ) {
         Serial.println("it's name");
         const uint8_t size = JSON_OBJECT_SIZE(1);
@@ -964,30 +1003,25 @@ void sendWiFiScan() {
 
 void sendConnectedStatus() {
   char buf[200];
-  String out;
-  /*if (isConnectedToInternet()) {
-    out = "{\"wifi_connected\": true}";
-  } else if (isConnectedToInternet() == false) {
-    out = "{\"wifi_connected\": false}";
-  }
+  String out = getStatusAsJsonString();
   out.toCharArray(buf, out.length() + 1);
   websocket.textAll(buf, out.length());
   Serial.println(out);
-  */
+  
 }
 
 
 //Functions triggered by buttons on webpage
 void checkWebsocketRequests() {
   isWiFiScanReady();
- // isConnectedStatusReady();
+  isConnectedStatusReady();
 }
 
 void isConnectedStatusReady() {
-  //if (connectedStatusSend == true) {
-  //  sendConnectedStatus();
- //   connectedStatusSend = false;
- // }
+  if (connectedStatusSend == true) {
+    sendConnectedStatus();
+    connectedStatusSend = false;
+  }
 }
 
 void isWiFiScanReady() {
@@ -999,4 +1033,61 @@ void isWiFiScanReady() {
 
 String getWifiAPName(){
   return AP_SSID;
+}
+void noneblockingWiFiHandler(){
+  if(millis() - prevWifiMillis > 100 && isNBConnecting == true){
+    prevWifiMillis = millis();
+     if(WiFi.status() != WL_CONNECTED){
+      if(millis() - noneBlockingWifiConnectStartTime > 8000){    
+        #ifdef VERBOSE
+        Serial.println("Could not connect to WiFi, reverting to Access Point");
+        #endif
+        setInternetStatus(false);
+        isNBConnecting = false;
+        sendConnectedStatus();
+      }
+     } else {
+       #ifdef VERBOSE
+      Serial.println("Connected!");
+      Serial.println(WiFi.localIP());
+    #endif
+      setInternetStatus(true);
+      isNBConnecting = false;
+      sendConnectedStatus();
+     }
+  }
+}
+
+void noneblockingWiFiConnect(){
+  WiFi.begin(getSSID().c_str(),getPass().c_str());
+  wifiCheckMillis = millis();
+  noneBlockingWifiConnectStartTime = millis();
+  isNBConnecting = true;
+
+}
+
+void setupAPSSID(){
+   // https://github.com/espressif/arduino-esp32/issues/3859#issuecomment-689171490
+  uint64_t chipID = ESP.getEfuseMac();
+  uint32_t low = chipID % 0xFFFFFFFF;
+  uint32_t high = (chipID >> 32) % 0xFFFFFFFF;
+  String out = String(low);
+  AP_SSID = AP_SSID+"-"+out;
+  Serial.println(AP_SSID);
+}
+
+void wifiStatusCheck(){
+  if(millis() - wifiCheckMillis > 3000){
+    if(WiFi.status() != WL_CONNECTED){
+       if(getInternetStatus() == true){
+        setInternetStatus(false);
+        sendConnectedStatus();
+      }
+    } else if(WiFi.status() == WL_CONNECTED){
+      if(getInternetStatus() == false){
+        setInternetStatus(true);
+        sendConnectedStatus();
+      }
+    }
+  }
 }

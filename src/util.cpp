@@ -5,6 +5,9 @@
 
 Preferences prefs;
 
+//Wifi variables
+bool isConnectedToInternet = false;
+
 bool isCredentials(){
     if(prefs.getString("SSID", "") == ""){
         return false;
@@ -48,4 +51,12 @@ void setName(String name){
 
 String getName(){
     return prefs.getString("NAME", DEFAULTNAME);
+}
+
+bool getInternetStatus(){
+    return isConnectedToInternet;
+}
+
+void setInternetStatus(bool status){
+     isConnectedToInternet = status;
 }
