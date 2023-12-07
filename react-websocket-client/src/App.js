@@ -193,7 +193,7 @@ const websocket = useRef(null);
           </Tab>
         </Tabs>
         <Row>
-        <Col>Once you have updated your Camera Settings, plus press Reset to return to capture mode.</Col>
+        <Col>Once you have updated your Camera Settings, please press Reset to return to capture mode.</Col>
         </Row>
         <Row>
           <Col>
