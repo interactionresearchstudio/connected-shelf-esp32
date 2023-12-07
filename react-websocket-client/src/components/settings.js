@@ -18,19 +18,6 @@ function Settings({startupData}) {
         
       }
 
-      function handleReset() {
-        
-        // Send data to the backend via POST
-        fetch('http://192.168.2.1:80/control?var=reset&val=1', {  // Enter your IP address here
-    
-          method: 'GET', 
-          mode: 'cors'
-    
-        })
-        
-      }
-    
-
     return (
     <>
     <SettingsCheckBox startUpCheck={startupData.vflip} labelName={"vertical flip"} controlVar={"vflip"}/>
@@ -47,8 +34,6 @@ function Settings({startupData}) {
     <SettingsSlider startUpCheck={startupData.agc_gain} labelName={"AGC Gain"} controlVar={"agc_gain"} minVal={0} maxVal={30}/>
     <SettingsSlider startUpCheck={startupData.special_effect} labelName={"Special Effects"} controlVar={"special_effect"} minVal={0} maxVal={6}/>
     <Button onClick={handleSaver} variant="primary">Save</Button>
-    <span/>
-    <Button onClick={handleReset} variant="primary">Reset</Button>
    </>
     );
 

@@ -47,13 +47,15 @@ const websocket = useRef(null);
             setNetworks(json);
             clearInterval(scanWifiIntervalId);
             setIsWifiScanning(false);
-          } else  if ("connected" in json[0]) {
+          }   
+          if ("connected" in json[0]) {
             console.log(json[0].connected);
-            console.log(json[0].displayName);
+            
             setWifiConnected(json[0].connected)
+          }
+          if("displayName" in json[0]){
             setName(json[0].displayName)
-          }else{
-            console.log("Array with unknown structure. No data was updated.");
+            console.log(json[0].displayName);
           }
         }
       } catch (e) {
@@ -69,6 +71,18 @@ const websocket = useRef(null);
     // eslint-disable-next-line
   }, []);
 
+
+  function handleReset() {
+        
+    // Send data to the backend via POST
+    fetch('http://192.168.2.1:80/control?var=reset&val=1', {  // Enter your IP address here
+
+      method: 'GET', 
+      mode: 'cors'
+
+    })
+    
+  }
 
   const onWifiSubmit = (e) => {
     e.preventDefault();
@@ -178,6 +192,14 @@ const websocket = useRef(null);
           </Col>
           </Tab>
         </Tabs>
+        <Row>
+        <Col>Once you have updated your Camera Settings, plus press Reset to return to capture mode.</Col>
+        </Row>
+        <Row>
+          <Col>
+        <Button onClick={handleReset} variant="primary">Reset</Button>
+        </Col>
+        </Row>
         </Container>
     </div>
   );

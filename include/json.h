@@ -15,4 +15,5 @@ String getScanAsJsonString();
 void getScanAsJson(JsonDocument& jsonDoc);
 void getStatusAsJson(JsonDocument& jsonDoc);
 String getStatusAsJsonString();
+String getWifiString();
 #endif

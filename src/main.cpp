@@ -1007,7 +1007,6 @@ void sendConnectedStatus() {
   out.toCharArray(buf, out.length() + 1);
   websocket.textAll(buf, out.length());
   Serial.println(out);
-  
 }
 
 
@@ -1080,13 +1079,19 @@ void wifiStatusCheck(){
   if(millis() - wifiCheckMillis > 3000){
     if(WiFi.status() != WL_CONNECTED){
        if(getInternetStatus() == true){
-        setInternetStatus(false);
-        sendConnectedStatus();
+          setInternetStatus(false);
+          char buf[200];
+          getWifiString().toCharArray(buf, getWifiString().length() + 1);
+          websocket.textAll(buf, getWifiString().length());
+          Serial.println(getWifiString());
       }
     } else if(WiFi.status() == WL_CONNECTED){
       if(getInternetStatus() == false){
         setInternetStatus(true);
-        sendConnectedStatus();
+        char buf[200];
+        getWifiString().toCharArray(buf, getWifiString().length() + 1);
+        websocket.textAll(buf, getWifiString().length());
+        Serial.println(getWifiString());
       }
     }
   }

@@ -10,12 +10,23 @@ String getScanAsJsonString() {
 }
 
 String getStatusAsJsonString() {
+
   String jsonString;
   StaticJsonDocument<200> jsonDoc;
   getStatusAsJson(jsonDoc);
   serializeJson(jsonDoc[0], jsonString);
   jsonDoc.clear();
   return (jsonString);
+}
+
+String getWifiString() {
+  String out;
+  if (getInternetStatus() == true) {
+    out = "[{\"connected\": true}]";
+  } else {
+    out = "[{\"connected\": false}]";
+  }
+  return out;
 }
 
 void getScanAsJson(JsonDocument& jsonDoc) {
