@@ -571,6 +571,7 @@ void setupSTA(){
       Serial.println("Could not connect to WiFi, reverting to Access Point");
     #endif
     setupAP();
+    setupServer();
   } else {
      #ifdef VERBOSE
       Serial.println("Connected!");
