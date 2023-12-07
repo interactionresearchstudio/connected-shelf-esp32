@@ -531,7 +531,7 @@ void setup() {
   setupWiFi();
 }
 
-unsigned long prevMillis = 18000000;
+unsigned long prevMillis = 1800000;
 
 void loop() {
   if(isAP){
@@ -540,7 +540,7 @@ void loop() {
     noneblockingWiFiHandler();
     wifiStatusCheck();
   } else {
-    if(millis() - prevMillis > 18000000){
+    if(millis() - prevMillis > 1800000){
       prevMillis = millis();
       sendPhoto();
     }
