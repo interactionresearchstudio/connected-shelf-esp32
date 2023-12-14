@@ -57,6 +57,9 @@ void noneblockingWiFiHandler();
 void setupAPSSID();
 void wifiStatusCheck();
 
+int setFramesize(sensor_t * s, int val);
+int getFramesize(sensor_t * s);
+
 typedef struct {
         camera_fb_t * fb;
         size_t index;
@@ -270,15 +273,11 @@ void initCamSettings(){
         #ifdef VERBOSE
           Serial.println("setting not set. Settings with current cam setting");
         #endif
-        setting = s->status.framesize;
+        setting = 14; 
+        setFramesize(s, setting);
         setSetting("framesize", setting);
       }
-      if(setting == 14){
-        //16:10 ratio
-        s->set_res_raw(s, 0, 0, 0, 0, 0, 100, 1600, 1000, 1600, 1000, true, true);
-      }else{
-        s->set_framesize(s, (framesize_t)setting);
-      }
+      setFramesize(s,setting);
 
       setting = getSetting("quality");
       if(setting == 99999){
@@ -372,7 +371,7 @@ void initCamSettings(){
 
 void saveCamSettings(){
      sensor_t * s = esp_camera_sensor_get();
-     setSetting("framesize",(int)s->status.framesize);
+     setSetting("framesize",(int)getFramesize(s));
      setSetting("quality",s->status.quality);
      setSetting("brightness",s->status.brightness);
      setSetting("contrast",s->status.contrast);
@@ -404,7 +403,7 @@ void getCameraStatus(AsyncWebServerRequest *request){
     char * p = json_response;
     *p++ = '{';
 
-    p+=sprintf(p, "\"framesize\":%u,", s->status.framesize);
+    p+=sprintf(p, "\"framesize\":%u,",getSetting("framesize"));
     p+=sprintf(p, "\"quality\":%u,", s->status.quality);
     p+=sprintf(p, "\"brightness\":%d,", s->status.brightness);
     p+=sprintf(p, "\"contrast\":%d,", s->status.contrast);
@@ -457,7 +456,7 @@ void setCameraVar(AsyncWebServerRequest *request){
 
 
     int res = 0;
-    if(!strcmp(variable, "framesize")) res = s->set_framesize(s, (framesize_t)val);
+    if(!strcmp(variable, "framesize")) res = setFramesize(s, val);
     else if(!strcmp(variable, "quality")) res = s->set_quality(s, val);
     else if(!strcmp(variable, "contrast")) res = s->set_contrast(s, val);
     else if(!strcmp(variable, "brightness")) res = s->set_brightness(s, val);
@@ -794,11 +793,11 @@ void setupCam(){
   if (psramFound()) {
     Serial.println("PSRAM found!");
     //config.frame_size = FRAMESIZE_SVGA;
-    config.frame_size = FRAMESIZE_UXGA;
+   // config.frame_size = FRAMESIZE_UXGA;
     config.jpeg_quality = 6;  //0-63 lower number means higher quality
     config.fb_count = 1;
   } else {
-    config.frame_size = FRAMESIZE_CIF;
+    //config.frame_size = FRAMESIZE_CIF;
     config.jpeg_quality = 12;  //0-63 lower number means higher quality
     config.fb_count = 1;
   }
@@ -827,8 +826,15 @@ void setupCam(){
 String sendPhoto() {
   String getAll;
   String getBody;
-
+  sensor_t * s = esp_camera_sensor_get();
+  
   camera_fb_t * fb = NULL;
+  for (int i = 0; i < 5; i++) {
+    fb = esp_camera_fb_get();
+    esp_camera_fb_return(fb);
+    delay(500);
+    fb = nullptr;
+  }
   fb = esp_camera_fb_get();
   if (!fb) {
     Serial.println("Camera capture failed");
@@ -1099,5 +1105,28 @@ void wifiStatusCheck(){
         Serial.println(getWifiString());
       }
     }
+  }
+}
+
+
+int setFramesize(sensor_t * s, int val){
+  if(val == 14){
+    //16:10 ratio
+    s->set_framesize(s, FRAMESIZE_UXGA);
+    delay(500);
+    s->set_res_raw(s, 0, 0, 0, 0, 0, 100, 1600, 1000, 1600, 1000, true, true);
+    setSetting("framesize",14);
+  } else {
+    s->set_framesize(s, (framesize_t)val);
+    setSetting("framesize",val);
+  }
+  return 1;
+}
+
+int getFramesize(sensor_t * s){
+  if(getSetting("framesize") != 14){
+    return s->status.framesize;
+  } else {
+    return 14;
   }
 }
