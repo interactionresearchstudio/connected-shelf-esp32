@@ -273,7 +273,12 @@ void initCamSettings(){
         setting = s->status.framesize;
         setSetting("framesize", setting);
       }
-      s->set_framesize(s, (framesize_t)setting);
+      if(setting == 14){
+        //16:10 ratio
+        s->set_res_raw(s, 0, 0, 0, 0, 0, 100, 1600, 1000, 1600, 1000, true, true);
+      }else{
+        s->set_framesize(s, (framesize_t)setting);
+      }
 
       setting = getSetting("quality");
       if(setting == 99999){
